@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Mark Checker</title>
+
+<style>
+body { font-family: Arial, sans-serif; background:#f0f2f8; padding:20px; }
+.card { max-width:650px; margin:20px auto; background:white; padding:20px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.1); }
+.hidden { display:none; }
+label { display:block; margin-top:10px; font-weight:bold; }
+input { width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:6px; }
+button { width:100%; padding:10px; margin-top:15px; background:#007bff; border:none; color:white; border-radius:6px; cursor:pointer; }
+button.secondary { background:#6c757d; }
+.error { color:red; margin-top:10px; }
+table { width:100%; border-collapse:collapse; margin-top:10px; }
+td, th { border:1px solid #ddd; padding:8px; }
+.link { margin-top:10px; color:#007bff; cursor:pointer; display:block; }
+</style>
+</head>
+
+<body>
+
+<!-- STUDENT LOGIN -->
+<div id="loginCard" class="card">
+  <h2>Student Login</h2>
+
+  <label>Username (First Name)</label>
+  <input type="text" id="loginUsername">
+
+  <label>Password</label>
+  <input type="password" id="loginPassword">
+
+  <button onclick="studentLogin()">Log in</button>
+  <div id="loginError" class="error"></div>
+
+  <div class="link" onclick="showAdminLogin()">Instructor Login</div>
+</div>
+
+<!-- ADMIN LOGIN -->
+<div id="adminLoginCard" class="card hidden">
+  <h2>Instructor Login</h2>
+
+  <label>Username</label>
+  <input type="text" id="adminUser">
+
+  <label>Password</label>
+  <input type="password" id="adminPass">
+
+  <button onclick="adminLogin()">Log in</button>
+  <button class="secondary" onclick="cancelAdminLogin()">Cancel</button>
+
+  <div id="adminLoginError" class="error"></div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel" class="card hidden">
+  <h2>Instructor Control Panel</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Full Name</th>
+        <th>Username</th>
+        <th>Password</th>
+        <th>Reset</th>
+      </tr>
+    </thead>
+    <tbody id="adminTableBody"></tbody>
+  </table>
+
+  <button class="secondary" onclick="logoutAdmin()">Log out</button>
+</div>
+
+<!-- PASSWORD CHANGE -->
+<div id="changeCard" class="card hidden">
+  <h2>Create New Password</h2>
+
+  <label>Username</label>
+  <input type="text" id="changeUser" readonly>
+
+  <label>New Password</label>
+  <input type="password" id="newPass">
+
+  <label>Confirm Password</label>
+  <input type="password" id="confirmPass">
+
+  <button onclick="saveNewPassword()">Save</button>
+  <button class="secondary" onclick="cancelPasswordChange()">Cancel</button>
+
+  <div id="changeError" class="error"></div>
+</div>
+
+<!-- RESULT CARD -->
+<div id="resultCard" class="card hidden">
+  <h2>Your Result</h2>
+  <div id="resultDisplay"></div>
+  <button class="secondary" onclick="logoutStudent()">Log out</button>
+</div>
+
+<script>
+// ---------- STUDENT DATA ----------
+const students = [
+  { Id:"RU1243/16", Name:"Abdi Musa Bakare", 
+    Quiz1: 2, Quiz2: "---", Project1: 14, Project2: "---", Project3: "---", FinalExam: "---", Total: "---" },
+
+  { Id:"RU0014/16", Name:"Abdulbasitt Hussein Ahmed", 
+    Quiz1: 3, Quiz2: 5, Project1: 14, Project2: "---", Project3: "---", FinalExam: "---", Total: "---" },
+
+  { Id:"RU0023/16", Name:"Abrahim Ahmed Mahammed", 
+    Quiz1: 3, Quiz2: 5, Project1: 14, Project2: "---", Project3: "---", FinalExam: "---", Total: "---" },
+
+  { Id:"RU0057/16", Name:"Amedsham Iemal Jiaril", 
+    Quiz1: 3, Quiz2: 5, Project1: 12, Project2: "---", Project3: "---", FinalExam: "---", Total: "---" },
+
+  { Id:"RU0097/16", Name:"Beyan Mohammed Aliyi", 
+    Quiz1: 4, Quiz2: 5, Project1: 13, Project2: "---", Project3: "---", FinalExam: "---", Total: "---" },
+
+  { Id:"RU0207/16", Name:"Hamdi Jafer Teyib", 
+    Quiz1: "---", Quiz2: 5, Project1: 14, Project2: "---", Project3: "---", FinalExam: "---", Total: "---" },
+
+  { Id:"RU0240/16", Name:"Imed Shekmohamed Abrahim", 
+    Quiz1: 3, Quiz2: 5, Project1: 12, Project2: "---", Project3: "---", FinalExam: "---", Total: "---" },
+
+  { Id:"RU0243/16", Name:"Isak Usso Tahir", 
+    Quiz1: 2, Quiz2: 5, Project1: 12, Project2: "---", Project3: "---", FinalExam: "---", Total: "---" },
+
+  { Id:"RU0259/16", Name:"Kalkidan Belayneh Eshetu", 
+    Quiz1: 4, Quiz2: 5, Project1: 13, Project2: "---", Project3: "---", FinalExam: "---", Total: "---" },
+
+  { Id:"RU0201/14", Name:"Libsework Yaregal Wubet", 
+    Quiz1: 3, Quiz2: 5, Project1: 12, Project2: "---", Project3: "---", FinalExam: "---", Total: "---" },
+
+  { Id:"RU0339/16", Name:"Mume Jaber Yuya", 
+    Quiz1: 3, Quiz2: 5, Project1: 13, Project2: "---", Project3: "---", FinalExam: "---", Total: "---" },
+
+  { Id:"RU0367/16", Name:"Nure Ahmed Aliyi", 
+    Quiz1: 2, Quiz2: 4, Project1: 13, Project2: "---", Project3: "---", FinalExam: "---", Total: "---" },
+
+  { Id:"RU0261/16", Name:"Kamsina Abas Bakar", 
+    Quiz1: 4, Quiz2: 5, Project1: 14, Project2: "---", Project3: "---", FinalExam: "---", Total: "---" }
+];
+
+
+// Map: username → student
+const userMap = {};
+students.forEach(s => userMap[s.Name.split(" ")[0].toLowerCase()] = s);
+
+// LocalStorage helpers
+function pwKey(u){ return "pw_"+u; }
+function initKey(u){ return "init_"+u; }
+
+// ---------- STUDENT LOGIN ----------
+function studentLogin(){
+  let u = loginUsername.value.trim().toLowerCase();
+  let p = loginPassword.value.trim();
+  let s = userMap[u];
+
+  loginError.textContent = "";
+
+  if(!s) return loginError.textContent = "Invalid username";
+
+  let saved = localStorage.getItem(pwKey(u));
+  let firstTime = !localStorage.getItem(initKey(u));
+
+  if(firstTime){
+    if(p !== s.Id) return loginError.textContent = "Enter your ID number (default password)";
+    changeUser.value = u;
+    show("changeCard"); hide("loginCard");
+    return;
+  }
+
+  if(p !== saved) return loginError.textContent = "Incorrect password";
+
+  showStudentResult(s);
+}
+
+function showStudentResult(s){
+  hide("loginCard");
+  show("resultCard");
+
+  resultDisplay.innerHTML = `
+    <p><strong>Name:</strong> ${s.Name}</p>
+    <p><strong>ID:</strong> ${s.Id}</p>
+    <table>
+      <tr><td>Quiz 1</td><td>${s.Quiz1}</td></tr>
+      <tr><td>Quiz 2</td><td>${s.Quiz2}</td></tr>
+      <tr><td>Project 1</td><td>${s.Project1}</td></tr>
+    </table>
+  `;
+}
+
+function logoutStudent(){
+  hide("resultCard"); show("loginCard");
+}
+
+// ---------- CHANGE PASSWORD ----------
+function saveNewPassword(){
+  let u = changeUser.value;
+  let np = newPass.value;
+  let cp = confirmPass.value;
+
+  changeError.textContent = "";
+
+  if(np.length < 4) return changeError.textContent = "Password too short";
+  if(np !== cp) return changeError.textContent = "Passwords do not match";
+
+  localStorage.setItem(pwKey(u), np);
+  localStorage.setItem(initKey(u), 1);
+
+  hide("changeCard"); show("loginCard");
+}
+
+function cancelPasswordChange(){
+  hide("changeCard"); show("loginCard");
+}
+
+// ---------- ADMIN LOGIN ----------
+function showAdminLogin(){ hide("loginCard"); show("adminLoginCard"); }
+function cancelAdminLogin(){ hide("adminLoginCard"); show("loginCard"); }
+
+function adminLogin(){
+  let u = adminUser.value.trim();
+  let p = adminPass.value.trim();
+
+  adminLoginError.textContent = "";
+
+  if(u === "awelhaji" && p === "awel1234"){
+    hide("adminLoginCard");
+    show("adminPanel");
+    loadAdminTable();
+  } else {
+    adminLoginError.textContent = "Incorrect admin credentials";
+  }
+}
+
+function logoutAdmin(){
+  hide("adminPanel"); show("loginCard");
+}
+
+// ---------- ADMIN PANEL ----------
+function loadAdminTable(){
+  adminTableBody.innerHTML = "";
+  for(let uname in userMap){
+    let s = userMap[uname];
+    let pw = localStorage.getItem(pwKey(uname)) || "(default ID)";
+    adminTableBody.innerHTML += `
+      <tr>
+        <td>${s.Name}</td>
+        <td>${uname}</td>
+        <td>${pw}</td>
+        <td><button onclick="resetPassword('${uname}')">Reset</button></td>
+      </tr>
+    `;
+  }
+}
+
+function resetPassword(uname){
+  let s = userMap[uname];
+  localStorage.removeItem(pwKey(uname));
+  localStorage.removeItem(initKey(uname));
+  alert("Password reset! Default = ID number.");
+  loadAdminTable();
+}
+
+// ---------- SHOW/HIDE HELPERS ----------
+function show(id){ document.getElementById(id).classList.remove("hidden"); }
+function hide(id){ document.getElementById(id).classList.add("hidden"); }
+</script>
+
+</body>
+</html>
